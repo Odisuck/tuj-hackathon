@@ -1,5 +1,6 @@
 import pygame
 import random
+import generateShape
 import colorsys
 
 # Initialize pygame
@@ -50,8 +51,14 @@ def get_random_color():
 
 class Tetrimino:
     def __init__(self):
-        self.shape_idx = random.randint(0, len(SHAPES) - 1)
-        self.shape = SHAPES[self.shape_idx]
+
+        if random.randint(0, 1) < 0.5:
+            self.shape_idx = random.randint(0, len(SHAPES) - 1)
+            self.shape = SHAPES[self.shape_idx]
+        else:
+            self.shape_idx = random.randint(0, len(SHAPES) - 1)
+            self.shape = SHAPES[self.shape_idx]
+            SHAPES.append(generateShape.generate_connected_4x4())
         
         # Get or create color for this shape index
         if self.shape_idx not in COLOR_ASSIGN:
