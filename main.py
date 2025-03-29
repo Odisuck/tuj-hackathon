@@ -381,7 +381,6 @@ def main():
 
     label = font.render("GAME OVER", 1, WHITE)
     play_sound("gameover")
-    pygame.time.delay(15000)
     screen.blit(label, (SCREEN_WIDTH//2 - label.get_width()//2, SCREEN_HEIGHT//2 - label.get_height()//2))
     pygame.display.update()
     pygame.time.delay(2000)
