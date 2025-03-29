@@ -13,7 +13,7 @@ def generate_connected_shape(score):
             size = 5
 
         # Generate grid with higher density for smaller sizes
-        density = 0.4 + (0.1 * size)
+        density = 0.1 + (0.1 * size)
         grid = [[1 if random.random() < density else 0 for _ in range(size)] 
                for _ in range(size)]
         

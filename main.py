@@ -61,6 +61,7 @@ class Tetrimino:
         else:
             self.shape_idx = random.randint(0, len(SHAPES) - 1)
             self.shape = SHAPES[self.shape_idx]
+            print(score)
             SHAPES.append(generateShape.generate_connected_shape(score))
         
         # Get or create color for this shape index
@@ -211,6 +212,7 @@ def main():
     fall_time = 0
     fall_speed = 0.5  # seconds
     run = True
+    global score
     score = 0
     global held_tetrimino, hold_used
 
