@@ -57,7 +57,3 @@ def generate_connected_shape(score):
 
 # Example usage with the exact format you need
 shape = generate_connected_shape(600)
-print("[")
-for row in shape:
-    print(f"    {row},")
-print("]")

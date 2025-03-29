@@ -143,12 +143,22 @@ def valid_space(tetrimino, grid):
                     return False
     return True
 
+def play_sound(type):
+    if type == "drop":
+        pygame.mixer.music.load('assets/drop.wav')
+        pygame.mixer.music.play()
+    
+    if type == "clear":
+        pygame.mixer.music.load('assets/clear.wav')
+        pygame.mixer.music.play()
+
 def check_lost(grid):
     return any(cell != 0 for cell in grid[0])
 
 def clear_rows(grid):
     completed_rows = [i for i, row in enumerate(grid) if all(cell != 0 for cell in row)]
     for row_idx in completed_rows:
+        play_sound("clear")
         del grid[row_idx]
         grid.insert(0, [0 for _ in range(GRID_WIDTH)])
     return len(completed_rows)
@@ -245,7 +255,6 @@ def main():
                 score += rows_cleared * 100
                 hold_used = False
                 if random.random() < 0.25:  # 25% chance to lie
-                    print("The game lied! You got a different piece.")
                     current_tetrimino = Tetrimino()
                 else:
                     current_tetrimino = copy.deepcopy(next_tetrimino)
@@ -310,6 +319,7 @@ def main():
                     while valid_space(current_tetrimino, grid):
                         current_tetrimino.y += 1
                     current_tetrimino.y -= 1
+                    play_sound("drop")
                     for y, row in enumerate(current_tetrimino.shape):
                         for x, cell in enumerate(row):
                             if cell:
