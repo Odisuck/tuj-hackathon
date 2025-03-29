@@ -35,6 +35,9 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Tetris with Random Colors")
 
 clock = pygame.time.Clock()
+held_tetrimino = None
+hold_used = False
+
 
 def get_random_color():
     # Generate a random color in RGB format
@@ -76,6 +79,22 @@ def draw_tetrimino(tetrimino):
                 )
                 pygame.draw.rect(screen, tetrimino.color, rect)
                 pygame.draw.rect(screen, GRAY, rect, 1)
+
+def draw_held_shape(tetrimino):
+    font = pygame.font.SysFont('comicsans', 20)
+    label = font.render("Held Shape:", 1, WHITE)
+    sx = GAME_AREA_LEFT + GRID_WIDTH * CELL_SIZE + 10
+    sy = SCREEN_HEIGHT - 120
+    screen.blit(label, (sx, sy))
+
+    if tetrimino:
+        for y, row in enumerate(tetrimino.shape):
+            for x, cell in enumerate(row):
+                if cell:
+                    pygame.draw.rect(
+                        screen, tetrimino.color, 
+                        (sx + x * CELL_SIZE, sy + y * CELL_SIZE + 30, CELL_SIZE, CELL_SIZE)
+                    )
 
 def valid_space(tetrimino, grid):
     for y, row in enumerate(tetrimino.shape):
@@ -121,6 +140,7 @@ def main():
     fall_speed = 0.5  # seconds
     run = True
     score = 0
+    global held_tetrimino, hold_used
 
     while run:
         fall_time += clock.get_rawtime() / 1000  # Convert to seconds
@@ -131,20 +151,18 @@ def main():
             current_tetrimino.y += 1
             if not valid_space(current_tetrimino, grid):
                 current_tetrimino.y -= 1
-                # Lock the piece in place
                 for y, row in enumerate(current_tetrimino.shape):
                     for x, cell in enumerate(row):
                         if cell:
                             grid[current_tetrimino.y + y][current_tetrimino.x + x] = current_tetrimino.color
-                # Check for cleared rows
                 rows_cleared = clear_rows(grid)
                 score += rows_cleared * 100
-                # Get new piece
+                hold_used = False  # ✅ reset here
                 current_tetrimino = next_tetrimino
                 next_tetrimino = Tetrimino()
-                # Check if game over
                 if check_lost(grid):
                     run = False
+
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -183,15 +201,29 @@ def main():
                                 grid[current_tetrimino.y + y][current_tetrimino.x + x] = current_tetrimino.color
                     rows_cleared = clear_rows(grid)
                     score += rows_cleared * 100
+                    hold_used = False
                     current_tetrimino = next_tetrimino
                     next_tetrimino = Tetrimino()
                     if check_lost(grid):
                         run = False
+
+                if event.key == pygame.K_LSHIFT:
+                    if not hold_used:
+                        if held_tetrimino is None:
+                            held_tetrimino = current_tetrimino
+                            current_tetrimino = next_tetrimino
+                            next_tetrimino = Tetrimino()
+                        else:
+                            held_tetrimino, current_tetrimino = current_tetrimino, held_tetrimino
+                            current_tetrimino.x = GRID_WIDTH // 2 - len(current_tetrimino.shape[0]) // 2
+                            current_tetrimino.y = 0
+                        hold_used = True
                     
         screen.fill(BLACK)
         draw_grid(grid)
         draw_tetrimino(current_tetrimino)
         draw_next_shape(next_tetrimino)
+        draw_held_shape(held_tetrimino)
 
         # Display score
         font = pygame.font.SysFont('comicsans', 30)
