@@ -383,7 +383,7 @@ def main():
     play_sound("gameover")
     screen.blit(label, (SCREEN_WIDTH//2 - label.get_width()//2, SCREEN_HEIGHT//2 - label.get_height()//2))
     pygame.display.update()
-    pygame.time.delay(2000)
+    pygame.time.delay(10000)
 
 if __name__ == "__main__":
     main()
