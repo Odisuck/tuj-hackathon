@@ -162,6 +162,10 @@ def play_sound(type):
     if type == "clear":
         pygame.mixer.music.load('assets/clear.wav')
         pygame.mixer.music.play()
+    if type == "gameover":
+        pygame.mixer.music.load('assets/sad-meow-song.wav')
+        pygame.mixer.music.play()
+
 
 def check_lost(grid):
     return any(cell != 0 for cell in grid[0])
@@ -374,6 +378,8 @@ def main():
         pygame.display.update()
 
     label = font.render("GAME OVER", 1, WHITE)
+    play_sound("gameover")
+    pygame.time.delay(15000)
     screen.blit(label, (SCREEN_WIDTH//2 - label.get_width()//2, SCREEN_HEIGHT//2 - label.get_height()//2))
     pygame.display.update()
     pygame.time.delay(2000)
