@@ -39,6 +39,8 @@ held_tetrimino = None
 hold_used = False
 
 
+COLOR_ASSIGN = {}  # Maps shape_idx to color
+
 def get_random_color():
     # Generate a random color in RGB format
     return random.randint(50, 255), random.randint(50, 255), random.randint(50, 255)
@@ -47,7 +49,12 @@ class Tetrimino:
     def __init__(self):
         self.shape_idx = random.randint(0, len(SHAPES) - 1)
         self.shape = SHAPES[self.shape_idx]
-        self.color = get_random_color()  # Random color for each piece
+        
+        # Get or create color for this shape index
+        if self.shape_idx not in COLOR_ASSIGN:
+            COLOR_ASSIGN[self.shape_idx] = get_random_color()
+        self.color = COLOR_ASSIGN[self.shape_idx]  # Always assign color
+        
         self.x = GRID_WIDTH // 2 - len(self.shape[0]) // 2
         self.y = 0
 
