@@ -139,6 +139,37 @@ def draw_next_shape(tetrimino):
                     screen, tetrimino.color, 
                     (sx + x * CELL_SIZE, sy + y * CELL_SIZE + 30, CELL_SIZE, CELL_SIZE)
                 )
+def draw_score(score):
+    base_font_size = 30
+    font_name = 'comicsans'
+    label_text = "Score:"
+    score_text = f"{score:,}"  # Just the number with commas
+
+    # Area for drawing the score section (right sidebar)
+    score_area_x = GAME_AREA_LEFT + GRID_WIDTH * CELL_SIZE
+    score_area_width = SCREEN_WIDTH - score_area_x - 10
+
+    # Start with base font size and shrink if needed
+    font_size = base_font_size
+    while font_size > 10:
+        font = pygame.font.SysFont(font_name, font_size)
+        label_surface = font.render(label_text, True, WHITE)
+        score_surface = font.render(score_text, True, WHITE)
+
+        total_width = label_surface.get_width() + score_surface.get_width() + 10  # 10px spacing
+
+        if total_width <= score_area_width:
+            break
+        font_size -= 1
+
+    # Calculate positions
+    label_x = score_area_x
+    score_x = score_area_x + score_area_width - score_surface.get_width()
+    y_pos = 10
+
+    # Blit to screen
+    screen.blit(label_surface, (label_x, y_pos))
+    screen.blit(score_surface, (score_x, y_pos))
 
 def main():
     grid = create_grid()
@@ -232,10 +263,7 @@ def main():
         draw_tetrimino(current_tetrimino)
         draw_next_shape(next_tetrimino)
         draw_held_shape(held_tetrimino)
-
-        # Display score
-        label = font.render(f"Score: {score}", 1, WHITE)
-        screen.blit(label, (GAME_AREA_LEFT + GRID_WIDTH * CELL_SIZE + 10, 10))
+        draw_score(score)
 
         pygame.display.update()
 
