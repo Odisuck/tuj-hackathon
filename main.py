@@ -282,6 +282,8 @@ def main():
             
             # Shop toggle
             if event.type == KEYDOWN and event.key == K_s:
+                pygame.mixer.music.load('assets/shop.wav')
+                pygame.mixer.music.play()
                 shop.visible = not shop.visible
             
             # Handle shop input
