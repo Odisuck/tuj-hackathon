@@ -5,6 +5,9 @@ import colorsys
 # Initialize pygame
 pygame.init()
 
+# Font
+font = pygame.font.Font('assets/PKMN_font.ttf', 20)
+
 # Colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -14,7 +17,7 @@ GRAY = (128, 128, 128)
 CELL_SIZE = 30
 GRID_WIDTH = 10
 GRID_HEIGHT = 20
-SCREEN_WIDTH = CELL_SIZE * (GRID_WIDTH + 6)
+SCREEN_WIDTH = CELL_SIZE * (GRID_WIDTH + 6) + 50
 SCREEN_HEIGHT = CELL_SIZE * GRID_HEIGHT
 GAME_AREA_LEFT = CELL_SIZE
 
@@ -88,7 +91,6 @@ def draw_tetrimino(tetrimino):
                 pygame.draw.rect(screen, GRAY, rect, 1)
 
 def draw_held_shape(tetrimino):
-    font = pygame.font.SysFont('comicsans', 20)
     label = font.render("Held Shape:", 1, WHITE)
     sx = GAME_AREA_LEFT + GRID_WIDTH * CELL_SIZE + 10
     sy = SCREEN_HEIGHT - 120
@@ -125,7 +127,6 @@ def clear_rows(grid):
     return len(completed_rows)
 
 def draw_next_shape(tetrimino):
-    font = pygame.font.SysFont('comicsans', 20)
     label = font.render("Next Shape:", 1, WHITE)
     sx = GAME_AREA_LEFT + GRID_WIDTH * CELL_SIZE + 10
     sy = 50
@@ -233,14 +234,12 @@ def main():
         draw_held_shape(held_tetrimino)
 
         # Display score
-        font = pygame.font.SysFont('comicsans', 30)
         label = font.render(f"Score: {score}", 1, WHITE)
         screen.blit(label, (GAME_AREA_LEFT + GRID_WIDTH * CELL_SIZE + 10, 10))
 
         pygame.display.update()
 
     # Game over message
-    font = pygame.font.SysFont('comicsans', 40)
     label = font.render("GAME OVER", 1, WHITE)
     screen.blit(label, (SCREEN_WIDTH//2 - label.get_width()//2, SCREEN_HEIGHT//2 - label.get_height()//2))
     pygame.display.update()
