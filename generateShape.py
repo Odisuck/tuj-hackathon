@@ -1,59 +1,63 @@
 import random
 
-def generate_connected_4x4():
+def generate_connected_shape(score):
     while True:
-        # Generate initial 4x4 grid
-        grid = [[1 if random.random() > 0.5 else 0 for _ in range(4)] for _ in range(4)]
+        # Determine grid size based on score
+        if score < 500:
+            size = 2
+        elif score < 1000:
+            size = 3
+        elif score < 1500:
+            size = 4
+        else:
+            size = 5
+
+        # Generate grid with higher density for smaller sizes
+        density = 0.4 + (0.1 * size)
+        grid = [[1 if random.random() < density else 0 for _ in range(size)] 
+               for _ in range(size)]
         
-        # Remove isolated 1s
+        # Remove isolated blocks
         changed = True
         while changed:
             changed = False
-            for y in range(4):
-                for x in range(4):
+            for y in range(size):
+                for x in range(size):
                     if grid[y][x] == 1:
-                        # Check orthogonally adjacent cells
-                        neighbors = [
-                            grid[y-1][x] if y > 0 else 0,
-                            grid[y+1][x] if y < 3 else 0,
-                            grid[y][x-1] if x > 0 else 0,
-                            grid[y][x+1] if x < 3 else 0
-                        ]
-                        if 1 not in neighbors:
+                        has_neighbor = False
+                        if y > 0 and grid[y-1][x] == 1: has_neighbor = True
+                        if y < size-1 and grid[y+1][x] == 1: has_neighbor = True
+                        if x > 0 and grid[y][x-1] == 1: has_neighbor = True
+                        if x < size-1 and grid[y][x+1] == 1: has_neighbor = True
+                        
+                        if not has_neighbor:
                             grid[y][x] = 0
                             changed = True
         
-        # Check if all 1s are connected (no split shapes)
-        def flood_fill(y, x, visited):
-            if (y, x) in visited or y < 0 or y >= 4 or x < 0 or x >= 4 or grid[y][x] != 1:
+        # Flood fill to check connectivity
+        def flood(y, x, visited):
+            if (y, x) in visited or y < 0 or y >= size or x < 0 or x >= size or grid[y][x] != 1:
                 return
             visited.add((y, x))
-            flood_fill(y-1, x, visited)
-            flood_fill(y+1, x, visited)
-            flood_fill(y, x-1, visited)
-            flood_fill(y, x+1, visited)
+            flood(y-1, x, visited)
+            flood(y+1, x, visited)
+            flood(y, x-1, visited)
+            flood(y, x+1, visited)
         
-        # Find first 1
-        start = None
-        for y in range(4):
-            for x in range(4):
-                if grid[y][x] == 1:
-                    start = (y, x)
-                    break
-            if start:
-                break
+        blocks = [(y, x) for y in range(size) for x in range(size) if grid[y][x] == 1]
         
-        # If there are any 1s, check connectivity
-        if start:
-            visited = set()
-            flood_fill(start[0], start[1], visited)
+        if not blocks:
+            continue
             
-            # Count total 1s and compare with visited
-            total_ones = sum(sum(row) for row in grid)
-            if len(visited) == total_ones and total_ones > 0:
-                return grid
+        visited = set()
+        flood(blocks[0][0], blocks[0][1], visited)
+        
+        if len(visited) == len(blocks) and len(blocks) >= 2:
+            return grid
 
-# Example usage
-shape = generate_connected_4x4()
+# Example usage with the exact format you need
+shape = generate_connected_shape(600)
+print("[")
 for row in shape:
-    print(row)
+    print(f"    {row},")
+print("]")
