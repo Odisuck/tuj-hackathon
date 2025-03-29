@@ -1,5 +1,6 @@
 import pygame
 import random
+import colorsys
 
 # Initialize pygame
 pygame.init()
@@ -8,15 +9,6 @@ pygame.init()
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GRAY = (128, 128, 128)
-COLORS = [
-    (0, 255, 255),  # Cyan (I)
-    (0, 0, 255),    # Blue (J)
-    (255, 165, 0),  # Orange (L)
-    (255, 255, 0),  # Yellow (O)
-    (0, 255, 0),    # Green (S)
-    (128, 0, 128),  # Purple (T)
-    (255, 0, 0)     # Red (Z)
-]
 
 # Game settings
 CELL_SIZE = 30
@@ -34,20 +26,25 @@ SHAPES = [
     [[1, 1], [1, 1]],  # O
     [[0, 1, 1], [1, 1, 0]],  # S
     [[0, 1, 0], [1, 1, 1]],  # T
-    [[1, 1, 0], [0, 1, 1]]   # Z
+    [[1, 1, 0], [0, 1, 1]],  # Z
+    [[0, 0, 0, 0], [0, 1, 0, 0], [0, 1, 1, 1], [0, 1, 1, 1]],  # Custom shape
 ]
 
 # Initialize screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Tetris?")
+pygame.display.set_caption("Tetris with Random Colors")
 
 clock = pygame.time.Clock()
+
+def get_random_color():
+    # Generate a random color in RGB format
+    return random.randint(50, 255), random.randint(50, 255), random.randint(50, 255)
 
 class Tetrimino:
     def __init__(self):
         self.shape_idx = random.randint(0, len(SHAPES) - 1)
         self.shape = SHAPES[self.shape_idx]
-        self.color = COLORS[self.shape_idx]
+        self.color = get_random_color()  # Random color for each piece
         self.x = GRID_WIDTH // 2 - len(self.shape[0]) // 2
         self.y = 0
 
@@ -64,8 +61,8 @@ def draw_grid(grid):
     for y in range(GRID_HEIGHT):
         for x in range(GRID_WIDTH):
             rect = pygame.Rect(GAME_AREA_LEFT + x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
-            if grid[y][x]:
-                pygame.draw.rect(screen, COLORS[grid[y][x] - 1], rect)
+            if grid[y][x] != 0:
+                pygame.draw.rect(screen, grid[y][x], rect)  # Use stored color
             pygame.draw.rect(screen, GRAY, rect, 1)
 
 def draw_tetrimino(tetrimino):
@@ -81,21 +78,21 @@ def draw_tetrimino(tetrimino):
                 pygame.draw.rect(screen, GRAY, rect, 1)
 
 def valid_space(tetrimino, grid):
-        for y, row in enumerate(tetrimino.shape):
-            for x, cell in enumerate(row):
-                if cell:
-                    if (tetrimino.y + y >= GRID_HEIGHT or 
-                        tetrimino.x + x < 0 or 
-                        tetrimino.x + x >= GRID_WIDTH or 
-                        grid[tetrimino.y + y][tetrimino.x + x]):
-                        return False
-        return True
+    for y, row in enumerate(tetrimino.shape):
+        for x, cell in enumerate(row):
+            if cell:
+                if (tetrimino.y + y >= GRID_HEIGHT or 
+                    tetrimino.x + x < 0 or 
+                    tetrimino.x + x >= GRID_WIDTH or 
+                    grid[tetrimino.y + y][tetrimino.x + x] != 0):
+                    return False
+    return True
 
 def check_lost(grid):
-    return any(cell for cell in grid[0])
+    return any(cell != 0 for cell in grid[0])
 
 def clear_rows(grid):
-    completed_rows = [i for i, row in enumerate(grid) if all(row)]
+    completed_rows = [i for i, row in enumerate(grid) if all(cell != 0 for cell in row)]
     for row_idx in completed_rows:
         del grid[row_idx]
         grid.insert(0, [0 for _ in range(GRID_WIDTH)])
@@ -138,7 +135,7 @@ def main():
                 for y, row in enumerate(current_tetrimino.shape):
                     for x, cell in enumerate(row):
                         if cell:
-                            grid[current_tetrimino.y + y][current_tetrimino.x + x] = current_tetrimino.shape_idx + 1
+                            grid[current_tetrimino.y + y][current_tetrimino.x + x] = current_tetrimino.color
                 # Check for cleared rows
                 rows_cleared = clear_rows(grid)
                 score += rows_cleared * 100
