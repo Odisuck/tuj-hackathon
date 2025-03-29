@@ -1,99 +1,199 @@
-import pygame, pygame.gfxdraw
+import pygame
 import random
-import sys
-import time
 
 # Initialize pygame
 pygame.init()
 
-clock = pygame.time.Clock()
-running = True
-dt = 0
-
-# Screen dimensions
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Blackjack")
-
 # Colors
-GREEN = (53, 101, 77)  # Felt green
-BLUE = (0, 0, 255)
-WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-GOLD = (212, 175, 55)
-RED = (255, 0, 0)
+WHITE = (255, 255, 255)
+GRAY = (128, 128, 128)
+COLORS = [
+    (0, 255, 255),  # Cyan (I)
+    (0, 0, 255),    # Blue (J)
+    (255, 165, 0),  # Orange (L)
+    (255, 255, 0),  # Yellow (O)
+    (0, 255, 0),    # Green (S)
+    (128, 0, 128),  # Purple (T)
+    (255, 0, 0)     # Red (Z)
+]
 
-# Fonts
-font = pygame.font.SysFont('Arial', 24)
-large_font = pygame.font.SysFont('Arial', 36)
+# Game settings
+CELL_SIZE = 30
+GRID_WIDTH = 10
+GRID_HEIGHT = 20
+SCREEN_WIDTH = CELL_SIZE * (GRID_WIDTH + 6)
+SCREEN_HEIGHT = CELL_SIZE * GRID_HEIGHT
+GAME_AREA_LEFT = CELL_SIZE
 
-# Table elements dimensions
-DEALER_AREA = pygame.Rect(100, 50, 600, 150)
-PLAYER_AREA = pygame.Rect(100, 350, 600, 150)
-BETTING_CIRCLE = pygame.Rect(350, 250, 100, 100)
-TABLE_EDGE = pygame.Rect(50, 25, 700, 550)
+# Tetrimino shapes
+SHAPES = [
+    [[1, 1, 1, 1]],  # I
+    [[1, 0, 0], [1, 1, 1]],  # J
+    [[0, 0, 1], [1, 1, 1]],  # L
+    [[1, 1], [1, 1]],  # O
+    [[0, 1, 1], [1, 1, 0]],  # S
+    [[0, 1, 0], [1, 1, 1]],  # T
+    [[1, 1, 0], [0, 1, 1]]   # Z
+]
 
-def draw_table():
-    # Draw table edge
-    pygame.draw.rect(screen, BLACK, TABLE_EDGE, border_radius=20)
-    pygame.draw.rect(screen, GREEN, TABLE_EDGE.inflate(-10, -10), border_radius=15)
-    
-    # Draw dealer and player areas
-    pygame.draw.rect(screen, WHITE, DEALER_AREA, 2, border_radius=10)
-    pygame.draw.rect(screen, WHITE, PLAYER_AREA, 2, border_radius=10)
-    
-    # Draw betting circle
-    pygame.draw.circle(screen, WHITE, BETTING_CIRCLE.center, BETTING_CIRCLE.width//2, 2)
-    
-    # Draw decorative elements
-    pygame.draw.arc(screen, GOLD, pygame.Rect(200, 200, 400, 200), 0, 3.14, 2)
-    
-    # Draw labels
-    dealer_text = large_font.render("DEALER", True, WHITE)
-    player_text = large_font.render("PLAYER", True, WHITE)
-    screen.blit(dealer_text, (DEALER_AREA.centerx - dealer_text.get_width()//2, DEALER_AREA.top - 40))
-    screen.blit(player_text, (PLAYER_AREA.centerx - player_text.get_width()//2, PLAYER_AREA.bottom + 10))
-    
-    # Draw chip rack (simplified)
-    pygame.draw.rect(screen, BLACK, (50, 500, 700, 50), border_radius=5)
-    pygame.draw.rect(screen, (100, 100, 100), (50, 500, 700, 50), 2, border_radius=5)
-    
-    # Draw some decorative chips
-    pygame.draw.circle(screen, RED, (100, 525), 15)
-    pygame.draw.circle(screen, WHITE, (150, 525), 15)
-    pygame.draw.circle(screen, GOLD, (200, 525), 15)
-    pygame.draw.circle(screen, BLUE, (250, 525), 15)
-    pygame.draw.circle(screen, GREEN, (300, 525), 15)
+# Initialize screen
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Tetris?")
 
-while running:
-    # poll for events
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+clock = pygame.time.Clock()
 
-    screen.fill(BLACK)  # Background (will be covered by table)
-    
-    # Draw the table
-    draw_table()
-    
-    # Display some sample cards (for visualization)
-    pygame.draw.rect(screen, WHITE, (DEALER_AREA.x + 20, DEALER_AREA.y + 15, 80, 120), border_radius=5)
-    pygame.draw.rect(screen, WHITE, (DEALER_AREA.x + 120, DEALER_AREA.y + 15, 80, 120), border_radius=5)
-    
-    pygame.draw.rect(screen, WHITE, (PLAYER_AREA.x + 20, PLAYER_AREA.y + 15, 80, 120), border_radius=5)
-    pygame.draw.rect(screen, WHITE, (PLAYER_AREA.x + 120, PLAYER_AREA.y + 15, 80, 120), border_radius=5)
-    pygame.draw.rect(screen, WHITE, (PLAYER_AREA.x + 220, PLAYER_AREA.y + 15, 80, 120), border_radius=5)
-    
-    # Draw a sample bet in the betting circle
-    bet_text = font.render("$100", True, GOLD)
-    screen.blit(bet_text, (BETTING_CIRCLE.centerx - bet_text.get_width()//2, 
-                          BETTING_CIRCLE.centery - bet_text.get_height()//2))
+class Tetrimino:
+    def __init__(self):
+        self.shape_idx = random.randint(0, len(SHAPES) - 1)
+        self.shape = SHAPES[self.shape_idx]
+        self.color = COLORS[self.shape_idx]
+        self.x = GRID_WIDTH // 2 - len(self.shape[0]) // 2
+        self.y = 0
 
-    # flip() the display to put your work on screen
-    pygame.display.flip()
+    def rotate(self):
+        # Transpose and reverse rows to rotate 90 degrees
+        rotated = [[self.shape[y][x] for y in range(len(self.shape)-1, -1, -1)] 
+                  for x in range(len(self.shape[0]))]
+        return rotated
 
-    # limits FPS to 60
-    dt = clock.tick(60) / 1000
+def create_grid():
+    return [[0 for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]
 
-pygame.quit()
+def draw_grid(grid):
+    for y in range(GRID_HEIGHT):
+        for x in range(GRID_WIDTH):
+            rect = pygame.Rect(GAME_AREA_LEFT + x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+            if grid[y][x]:
+                pygame.draw.rect(screen, COLORS[grid[y][x] - 1], rect)
+            pygame.draw.rect(screen, GRAY, rect, 1)
+
+def draw_tetrimino(tetrimino):
+    for y, row in enumerate(tetrimino.shape):
+        for x, cell in enumerate(row):
+            if cell:
+                rect = pygame.Rect(
+                    GAME_AREA_LEFT + (tetrimino.x + x) * CELL_SIZE,
+                    (tetrimino.y + y) * CELL_SIZE,
+                    CELL_SIZE, CELL_SIZE
+                )
+                pygame.draw.rect(screen, tetrimino.color, rect)
+                pygame.draw.rect(screen, GRAY, rect, 1)
+
+def valid_space(tetrimino, grid):
+        for y, row in enumerate(tetrimino.shape):
+            for x, cell in enumerate(row):
+                if cell:
+                    if (tetrimino.y + y >= GRID_HEIGHT or 
+                        tetrimino.x + x < 0 or 
+                        tetrimino.x + x >= GRID_WIDTH or 
+                        grid[tetrimino.y + y][tetrimino.x + x]):
+                        return False
+        return True
+
+def check_lost(grid):
+    return any(cell for cell in grid[0])
+
+def clear_rows(grid):
+    completed_rows = [i for i, row in enumerate(grid) if all(row)]
+    for row_idx in completed_rows:
+        del grid[row_idx]
+        grid.insert(0, [0 for _ in range(GRID_WIDTH)])
+    return len(completed_rows)
+
+def draw_next_shape(tetrimino):
+    font = pygame.font.SysFont('comicsans', 20)
+    label = font.render("Next Shape:", 1, WHITE)
+    sx = GAME_AREA_LEFT + GRID_WIDTH * CELL_SIZE + 10
+    sy = 50
+    screen.blit(label, (sx, sy))
+
+    for y, row in enumerate(tetrimino.shape):
+        for x, cell in enumerate(row):
+            if cell:
+                pygame.draw.rect(
+                    screen, tetrimino.color, 
+                    (sx + x * CELL_SIZE, sy + y * CELL_SIZE + 30, CELL_SIZE, CELL_SIZE)
+                )
+
+def main():
+    grid = create_grid()
+    current_tetrimino = Tetrimino()
+    next_tetrimino = Tetrimino()
+    fall_time = 0
+    fall_speed = 0.5  # seconds
+    run = True
+    score = 0
+
+    while run:
+        fall_time += clock.get_rawtime() / 1000  # Convert to seconds
+        clock.tick()
+
+        if fall_time >= fall_speed:
+            fall_time = 0
+            current_tetrimino.y += 1
+            if not valid_space(current_tetrimino, grid):
+                current_tetrimino.y -= 1
+                # Lock the piece in place
+                for y, row in enumerate(current_tetrimino.shape):
+                    for x, cell in enumerate(row):
+                        if cell:
+                            grid[current_tetrimino.y + y][current_tetrimino.x + x] = current_tetrimino.shape_idx + 1
+                # Check for cleared rows
+                rows_cleared = clear_rows(grid)
+                score += rows_cleared * 100
+                # Get new piece
+                current_tetrimino = next_tetrimino
+                next_tetrimino = Tetrimino()
+                # Check if game over
+                if check_lost(grid):
+                    run = False
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                pygame.quit()
+                return
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    current_tetrimino.x -= 1
+                    if not valid_space(current_tetrimino, grid):
+                        current_tetrimino.x += 1
+                if event.key == pygame.K_RIGHT:
+                    current_tetrimino.x += 1
+                    if not valid_space(current_tetrimino, grid):
+                        current_tetrimino.x -= 1
+                if event.key == pygame.K_DOWN:
+                    current_tetrimino.y += 1
+                    if not valid_space(current_tetrimino, grid):
+                        current_tetrimino.y -= 1
+                if event.key == pygame.K_UP:
+                    rotated = current_tetrimino.rotate()
+                    old_shape = current_tetrimino.shape
+                    current_tetrimino.shape = rotated
+                    if not valid_space(current_tetrimino, grid):
+                        current_tetrimino.shape = old_shape
+
+        screen.fill(BLACK)
+        draw_grid(grid)
+        draw_tetrimino(current_tetrimino)
+        draw_next_shape(next_tetrimino)
+
+        # Display score
+        font = pygame.font.SysFont('comicsans', 30)
+        label = font.render(f"Score: {score}", 1, WHITE)
+        screen.blit(label, (GAME_AREA_LEFT + GRID_WIDTH * CELL_SIZE + 10, 10))
+
+        pygame.display.update()
+
+    # Game over message
+    font = pygame.font.SysFont('comicsans', 40)
+    label = font.render("GAME OVER", 1, WHITE)
+    screen.blit(label, (SCREEN_WIDTH//2 - label.get_width()//2, SCREEN_HEIGHT//2 - label.get_height()//2))
+    pygame.display.update()
+    pygame.time.delay(2000)  # Wait 2 seconds before closing
+
+if __name__ == "__main__":
+    main()
+    pygame.quit()
