@@ -172,6 +172,22 @@ def main():
                     if not valid_space(current_tetrimino, grid):
                         current_tetrimino.shape = old_shape
 
+                if event.key == pygame.K_SPACE:
+                    # Hard drop
+                    while valid_space(current_tetrimino, grid):
+                        current_tetrimino.y += 1
+                    current_tetrimino.y -= 1
+                    for y, row in enumerate(current_tetrimino.shape):
+                        for x, cell in enumerate(row):
+                            if cell:
+                                grid[current_tetrimino.y + y][current_tetrimino.x + x] = current_tetrimino.color
+                    rows_cleared = clear_rows(grid)
+                    score += rows_cleared * 100
+                    current_tetrimino = next_tetrimino
+                    next_tetrimino = Tetrimino()
+                    if check_lost(grid):
+                        run = False
+                    
         screen.fill(BLACK)
         draw_grid(grid)
         draw_tetrimino(current_tetrimino)
