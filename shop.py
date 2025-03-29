@@ -19,6 +19,7 @@ class Shop:
         self.selected_item = 0
 
     def draw(self, screen, score, screen_width, screen_height):
+
         if not self.visible:
             return
         
