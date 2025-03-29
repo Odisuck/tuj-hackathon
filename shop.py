@@ -34,8 +34,8 @@ class Shop:
             screen_width // 2,
             screen_height // 2
         )
-        pygame.draw.rect(screen, (50, 50, 80), shop_rect)
-        pygame.draw.rect(screen, (100, 100, 150), shop_rect, 3)
+        pygame.draw.rect(screen, (20, 50, 80), shop_rect)
+        pygame.draw.rect(screen, (100, 100, 100), shop_rect, 3)
         
         # Draw title
         title = font.render("SHOP", True, (255, 255, 255))
@@ -58,8 +58,17 @@ class Shop:
             screen.blit(desc_text, (shop_rect.x + 30, shop_rect.y + 130 + i * 60))
         
         # Draw instructions
-        instructions = font.render("UP/DOWN: Select  ENTER: Buy  ESC: Close", True, (200, 200, 200))
-        screen.blit(instructions, (shop_rect.centerx - instructions.get_width() // 2, shop_rect.bottom - 40))
+            instructions = [
+                "UP/DOWN: Select",
+                "ENTER: Buy",
+                "ESC: Close"
+            ]
+            for i, line in enumerate(instructions):
+                text = font.render(line, True, (200, 200, 200))
+                screen.blit(
+                    text, (shop_rect.centerx - text.get_width() // 2, 
+                    shop_rect.bottom - 60 + i * 25)
+                )
 
     def handle_input(self, event):
         if not self.visible:
