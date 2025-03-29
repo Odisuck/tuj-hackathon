@@ -17,6 +17,9 @@ font = pygame.font.Font('assets/PKMN_font.ttf', 20)
 init_shop('assets/PKMN_font.ttf')
 shop = Shop()
 
+#Grid lines toggler
+grid_style_toggle = False
+
 # Colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -99,11 +102,19 @@ def draw_grid(grid):
         for x in range(GRID_WIDTH):
             rect = pygame.Rect(GAME_AREA_LEFT + x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
 
-            if grid[y][x] != 0:
-                pygame.draw.rect(screen, grid[y][x], rect)  # fill block color
-                pygame.draw.rect(screen, BLACK, rect, 1)     # draw border on placed block
+            if grid_style_toggle:
+                # Style 2
+                if grid[y][x] != 0:
+                    pygame.draw.rect(screen, grid[y][x], rect)
+                    pygame.draw.rect(screen, BLACK, rect, 1)
+                else:
+                    pygame.draw.rect(screen, (20, 20, 20), rect)
             else:
-                pygame.draw.rect(screen, (20, 20, 20), rect)  # soft background for empty cells
+                # Style 1
+                if grid[y][x] != 0:
+                    pygame.draw.rect(screen, grid[y][x], rect)
+                pygame.draw.rect(screen, GRAY, rect, 1)
+
 
 def draw_tetrimino(tetrimino):
     for y, row in enumerate(tetrimino.shape):
@@ -226,7 +237,7 @@ def draw_ghost_piece(tetrimino, grid):
                 pygame.draw.rect(screen, ghost.color, rect, 1)
 
 def main():
-    global GRID_WIDTH, GRID_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT, screen, score
+    global GRID_WIDTH, GRID_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT, screen, score, grid_style_toggle
     
     grid = create_grid()
     current_tetrimino = Tetrimino()
@@ -237,6 +248,7 @@ def main():
     score = 0
     held_tetrimino = None
     hold_used = False
+
 
     while run:
         fall_time += clock.get_rawtime() / 1000
@@ -296,6 +308,8 @@ def main():
                 continue  # Skip other input when shop is open
                 
             if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_t:
+                    grid_style_toggle = not grid_style_toggle
                 if event.key == pygame.K_LEFT:
                     current_tetrimino.x -= 1
                     if not valid_space(current_tetrimino, grid):
