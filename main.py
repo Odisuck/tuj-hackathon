@@ -5,6 +5,7 @@ import colorsys
 from checkUnique import *
 from shop import *
 from pygame.locals import *
+import copy
 
 # Initialize pygame
 pygame.init()
@@ -97,9 +98,12 @@ def draw_grid(grid):
     for y in range(GRID_HEIGHT):
         for x in range(GRID_WIDTH):
             rect = pygame.Rect(GAME_AREA_LEFT + x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+
             if grid[y][x] != 0:
-                pygame.draw.rect(screen, grid[y][x], rect)
-            pygame.draw.rect(screen, GRAY, rect, 1)
+                pygame.draw.rect(screen, grid[y][x], rect)  # fill block color
+                pygame.draw.rect(screen, BLACK, rect, 1)     # draw border on placed block
+            else:
+                pygame.draw.rect(screen, (20, 20, 20), rect)  # soft background for empty cells
 
 def draw_tetrimino(tetrimino):
     for y, row in enumerate(tetrimino.shape):
@@ -240,7 +244,11 @@ def main():
                 rows_cleared = clear_rows(grid)
                 score += rows_cleared * 100
                 hold_used = False
-                current_tetrimino = next_tetrimino
+                if random.random() < 0.25:  # 25% chance to lie
+                    print("The game lied! You got a different piece.")
+                    current_tetrimino = Tetrimino()
+                else:
+                    current_tetrimino = copy.deepcopy(next_tetrimino)
                 next_tetrimino = Tetrimino()
                 if check_lost(grid):
                     run = False
@@ -309,7 +317,12 @@ def main():
                     rows_cleared = clear_rows(grid)
                     score += rows_cleared * 100
                     hold_used = False
-                    current_tetrimino = next_tetrimino
+                    if random.random() < 0.25:  # 25% chance to lie
+                        print("The game lied! You got a different piece.")
+                        current_tetrimino = Tetrimino()
+                    else:
+                        current_tetrimino = copy.deepcopy(next_tetrimino)
+
                     next_tetrimino = Tetrimino()
                     if check_lost(grid):
                         run = False
