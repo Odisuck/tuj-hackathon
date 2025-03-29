@@ -22,6 +22,9 @@ SCREEN_WIDTH = CELL_SIZE * (GRID_WIDTH + 6) + 50
 SCREEN_HEIGHT = CELL_SIZE * GRID_HEIGHT
 GAME_AREA_LEFT = CELL_SIZE
 
+# Score
+score = 0
+
 # Tetrimino shapes
 SHAPES = [
     [[1, 1, 1, 1]],  # I
@@ -52,13 +55,13 @@ def get_random_color():
 class Tetrimino:
     def __init__(self):
 
-        if random.randint(0, 1) < 0.5:
+        if random.randint(0, 1) < 0.8:
             self.shape_idx = random.randint(0, len(SHAPES) - 1)
             self.shape = SHAPES[self.shape_idx]
         else:
             self.shape_idx = random.randint(0, len(SHAPES) - 1)
             self.shape = SHAPES[self.shape_idx]
-            SHAPES.append(generateShape.generate_connected_4x4())
+            SHAPES.append(generateShape.generate_connected_shape(score))
         
         # Get or create color for this shape index
         if self.shape_idx not in COLOR_ASSIGN:
