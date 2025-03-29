@@ -4,13 +4,13 @@ def generate_connected_shape(score):
     while True:
         # Determine grid size based on score
         if score < 500:
-            size = 3
+            size = 2
         elif score < 1000:
-            size = 4
+            size = 3
         elif score < 1500:
-            size = 5
+            size = 4
         else:
-            size = 6
+            size = 5
 
         # Generate grid with higher density for smaller sizes
         density = 0.4 + (0.1 * size)
