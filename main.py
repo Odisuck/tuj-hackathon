@@ -347,8 +347,7 @@ def main():
                     rows_cleared = clear_rows(grid)
                     score += rows_cleared * 100
                     hold_used = False
-                    if random.random() < 0.25:  # 25% chance to lie
-                        print("The game lied! You got a different piece.")
+                    if random.random() < 0.5:
                         current_tetrimino = Tetrimino()
                     else:
                         current_tetrimino = copy.deepcopy(next_tetrimino)
