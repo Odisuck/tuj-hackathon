@@ -140,8 +140,7 @@ def draw_next_shape(tetrimino):
                     (sx + x * CELL_SIZE, sy + y * CELL_SIZE + 30, CELL_SIZE, CELL_SIZE)
                 )
 def draw_score(score):
-    base_font_size = 30
-    font_name = 'comicsans'
+    base_font_size = 25
     label_text = "Score:"
     score_text = f"{score:,}"  # Just the number with commas
 
@@ -152,7 +151,7 @@ def draw_score(score):
     # Start with base font size and shrink if needed
     font_size = base_font_size
     while font_size > 10:
-        font = pygame.font.SysFont(font_name, font_size)
+        font = pygame.font.Font("assets/PKMN_font.ttf", font_size)
         label_surface = font.render(label_text, True, WHITE)
         score_surface = font.render(score_text, True, WHITE)
 
