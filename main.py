@@ -177,6 +177,30 @@ def draw_score(score):
     screen.blit(label_surface, (label_x, y_pos))
     screen.blit(score_surface, (score_x, y_pos))
 
+def draw_ghost_piece(tetrimino, grid):
+    # Create a copy of the current piece
+    ghost = Tetrimino()
+    ghost.shape = tetrimino.shape
+    ghost.color = tuple(min(255, c + 50) for c in tetrimino.color)  # Lighten color
+    ghost.x = tetrimino.x
+    ghost.y = tetrimino.y
+
+    # Drop it until it hits something
+    while valid_space(ghost, grid):
+        ghost.y += 1
+    ghost.y -= 1  # Step back to valid position
+
+    # Draw it as a translucent or outlined piece
+    for y, row in enumerate(ghost.shape):
+        for x, cell in enumerate(row):
+            if cell:
+                rect = pygame.Rect(
+                    GAME_AREA_LEFT + (ghost.x + x) * CELL_SIZE,
+                    (ghost.y + y) * CELL_SIZE,
+                    CELL_SIZE, CELL_SIZE
+                )
+                pygame.draw.rect(screen, ghost.color, rect, 1)  # Outline only
+
 def main():
     grid = create_grid()
     current_tetrimino = Tetrimino()
@@ -266,6 +290,7 @@ def main():
                     
         screen.fill(BLACK)
         draw_grid(grid)
+        draw_ghost_piece(current_tetrimino, grid)
         draw_tetrimino(current_tetrimino)
         draw_next_shape(next_tetrimino)
         draw_held_shape(held_tetrimino)
