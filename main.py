@@ -3,6 +3,8 @@ import random
 import generateShape
 import colorsys
 from checkUnique import *
+from shop import *
+from pygame.locals import *
 
 # Initialize pygame
 pygame.init()
@@ -10,12 +12,16 @@ pygame.init()
 # Font
 font = pygame.font.Font('assets/PKMN_font.ttf', 20)
 
+# Initialize shop
+init_shop('assets/PKMN_font.ttf')
+shop = Shop()
+
 # Colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GRAY = (128, 128, 128)
 
-# Game settings
+# Game settings (now changeable through shop)
 CELL_SIZE = 30
 GRID_WIDTH = 10
 GRID_HEIGHT = 20
@@ -40,17 +46,15 @@ SHAPES = [
 
 # Initialize screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Tetris with Random Colors")
+pygame.display.set_caption("Tetris with Random Colors and Shop")
 
 clock = pygame.time.Clock()
 held_tetrimino = None
 hold_used = False
 
-
 COLOR_ASSIGN = {}  # Maps shape_idx to color
 
 def get_random_color():
-    # Generate a random color in RGB format
     return random.randint(50, 255), random.randint(50, 255), random.randint(50, 255)
 
 class Tetrimino:
@@ -58,8 +62,7 @@ class Tetrimino:
         self.shape_idx = random.randint(0, len(SHAPES) - 1)
         self.shape = SHAPES[self.shape_idx]
         
-        # Occasionally generate a new shape (reduced probability)
-        if random.randint(0, 1) < 0.5 :  # Only after some score threshold
+        if random.randint(0, 1) < 0.5:
             attempts = 0
             max_attempts = 10
             new_shape = None
@@ -76,7 +79,6 @@ class Tetrimino:
                 self.shape_idx = len(SHAPES) - 1
                 self.shape = new_shape
         
-        # Get or create color for this shape index
         if self.shape_idx not in COLOR_ASSIGN:
             COLOR_ASSIGN[self.shape_idx] = get_random_color()
         self.color = COLOR_ASSIGN[self.shape_idx]
@@ -85,7 +87,6 @@ class Tetrimino:
         self.y = 0
 
     def rotate(self):
-        # Transpose and reverse rows to rotate 90 degrees
         rotated = [[self.shape[y][x] for y in range(len(self.shape)-1, -1, -1)] 
                   for x in range(len(self.shape[0]))]
         return rotated
@@ -98,7 +99,7 @@ def draw_grid(grid):
         for x in range(GRID_WIDTH):
             rect = pygame.Rect(GAME_AREA_LEFT + x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
             if grid[y][x] != 0:
-                pygame.draw.rect(screen, grid[y][x], rect)  # Use stored color
+                pygame.draw.rect(screen, grid[y][x], rect)
             pygame.draw.rect(screen, GRAY, rect, 1)
 
 def draw_tetrimino(tetrimino):
@@ -162,51 +163,45 @@ def draw_next_shape(tetrimino):
                     screen, tetrimino.color, 
                     (sx + x * CELL_SIZE, sy + y * CELL_SIZE + 30, CELL_SIZE, CELL_SIZE)
                 )
+
 def draw_score(score):
     base_font_size = 25
     label_text = "Score:"
-    score_text = f"{score:,}"  # Just the number with commas
+    score_text = f"{score:,}"
 
-    # Area for drawing the score section (right sidebar)
     score_area_x = GAME_AREA_LEFT + GRID_WIDTH * CELL_SIZE
     score_area_width = SCREEN_WIDTH - score_area_x - 10
 
-    # Start with base font size and shrink if needed
     font_size = base_font_size
     while font_size > 10:
         font = pygame.font.Font("assets/PKMN_font.ttf", font_size)
         label_surface = font.render(label_text, True, WHITE)
         score_surface = font.render(score_text, True, WHITE)
 
-        total_width = label_surface.get_width() + score_surface.get_width() + 10  # 10px spacing
+        total_width = label_surface.get_width() + score_surface.get_width() + 10
 
         if total_width <= score_area_width:
             break
         font_size -= 1
 
-    # Calculate positions
     label_x = score_area_x
     score_x = score_area_x + score_area_width - score_surface.get_width()
     y_pos = 10
 
-    # Blit to screen
     screen.blit(label_surface, (label_x, y_pos))
     screen.blit(score_surface, (score_x, y_pos))
 
 def draw_ghost_piece(tetrimino, grid):
-    # Create a copy of the current piece
     ghost = Tetrimino()
     ghost.shape = tetrimino.shape
-    ghost.color = tuple(min(255, c + 50) for c in tetrimino.color)  # Lighten color
+    ghost.color = tuple(min(255, c + 50) for c in tetrimino.color)
     ghost.x = tetrimino.x
     ghost.y = tetrimino.y
 
-    # Drop it until it hits something
     while valid_space(ghost, grid):
         ghost.y += 1
-    ghost.y -= 1  # Step back to valid position
+    ghost.y -= 1
 
-    # Draw it as a translucent or outlined piece
     for y, row in enumerate(ghost.shape):
         for x, cell in enumerate(row):
             if cell:
@@ -215,24 +210,26 @@ def draw_ghost_piece(tetrimino, grid):
                     (ghost.y + y) * CELL_SIZE,
                     CELL_SIZE, CELL_SIZE
                 )
-                pygame.draw.rect(screen, ghost.color, rect, 1)  # Outline only
+                pygame.draw.rect(screen, ghost.color, rect, 1)
 
 def main():
+    global GRID_WIDTH, GRID_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT, screen, score
+    
     grid = create_grid()
     current_tetrimino = Tetrimino()
     next_tetrimino = Tetrimino()
     fall_time = 0
-    fall_speed = 0.5  # seconds
+    fall_speed = 0.5
     run = True
-    global score
     score = 0
-    global held_tetrimino, hold_used
+    held_tetrimino = None
+    hold_used = False
 
     while run:
-        fall_time += clock.get_rawtime() / 1000  # Convert to seconds
+        fall_time += clock.get_rawtime() / 1000
         clock.tick()
 
-        if fall_time >= fall_speed:
+        if fall_time >= fall_speed and not shop.visible:
             fall_time = 0
             current_tetrimino.y += 1
             if not valid_space(current_tetrimino, grid):
@@ -243,19 +240,45 @@ def main():
                             grid[current_tetrimino.y + y][current_tetrimino.x + x] = current_tetrimino.color
                 rows_cleared = clear_rows(grid)
                 score += rows_cleared * 100
-                hold_used = False  # ✅ reset here
+                hold_used = False
                 current_tetrimino = next_tetrimino
                 next_tetrimino = Tetrimino()
                 if check_lost(grid):
                     run = False
-
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
                 return
-
+            
+            # Shop toggle
+            if event.type == KEYDOWN and event.key == K_s:
+                shop.visible = not shop.visible
+            
+            # Handle shop input
+            shop_result = shop.handle_input(event)
+            if shop_result == "buy":
+                cost, grid_expanded = shop.purchase(score)
+                if grid_expanded and score >= cost:
+                    score -= cost
+                    GRID_WIDTH += 1
+                    GRID_HEIGHT += 1
+                    SCREEN_WIDTH = CELL_SIZE * (GRID_WIDTH + 6) + 50
+                    SCREEN_HEIGHT = CELL_SIZE * GRID_HEIGHT
+                    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+                    # Create new grid with updated dimensions
+                    new_grid = [[0 for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]
+                    # Copy existing blocks to new grid
+                    for y in range(min(GRID_HEIGHT, len(grid))):
+                        for x in range(min(GRID_WIDTH, len(grid[0]))):
+                            if grid[y][x] != 0:
+                                new_grid[y][x] = grid[y][x]
+                    grid = new_grid
+            
+            if shop.visible:
+                continue  # Skip other input when shop is open
+                
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     current_tetrimino.x -= 1
@@ -277,7 +300,6 @@ def main():
                         current_tetrimino.shape = old_shape
 
                 if event.key == pygame.K_SPACE:
-                    # Hard drop
                     while valid_space(current_tetrimino, grid):
                         current_tetrimino.y += 1
                     current_tetrimino.y -= 1
@@ -304,7 +326,7 @@ def main():
                             current_tetrimino.x = GRID_WIDTH // 2 - len(current_tetrimino.shape[0]) // 2
                             current_tetrimino.y = 0
                         hold_used = True
-                    
+
         screen.fill(BLACK)
         draw_grid(grid)
         draw_ghost_piece(current_tetrimino, grid)
@@ -312,14 +334,13 @@ def main():
         draw_next_shape(next_tetrimino)
         draw_held_shape(held_tetrimino)
         draw_score(score)
-
+        shop.draw(screen, score, SCREEN_WIDTH, SCREEN_HEIGHT)
         pygame.display.update()
 
-    # Game over message
     label = font.render("GAME OVER", 1, WHITE)
     screen.blit(label, (SCREEN_WIDTH//2 - label.get_width()//2, SCREEN_HEIGHT//2 - label.get_height()//2))
     pygame.display.update()
-    pygame.time.delay(2000)  # Wait 2 seconds before closing
+    pygame.time.delay(2000)
 
 if __name__ == "__main__":
     main()
