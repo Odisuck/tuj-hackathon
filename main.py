@@ -2,6 +2,7 @@ import pygame
 import random
 import generateShape
 import colorsys
+from checkUnique import *
 
 # Initialize pygame
 pygame.init()
@@ -54,20 +55,31 @@ def get_random_color():
 
 class Tetrimino:
     def __init__(self):
-
-        if random.randint(0, 1) < 0.8:
-            self.shape_idx = random.randint(0, len(SHAPES) - 1)
-            self.shape = SHAPES[self.shape_idx]
-        else:
-            self.shape_idx = random.randint(0, len(SHAPES) - 1)
-            self.shape = SHAPES[self.shape_idx]
-            print(score)
-            SHAPES.append(generateShape.generate_connected_shape(score))
+        self.shape_idx = random.randint(0, len(SHAPES) - 1)
+        self.shape = SHAPES[self.shape_idx]
+        
+        # Occasionally generate a new shape (reduced probability)
+        if random.randint(0, 1) < 0.5 :  # Only after some score threshold
+            attempts = 0
+            max_attempts = 10
+            new_shape = None
+            
+            while attempts < max_attempts:
+                new_shape = generateShape.generate_connected_shape(score)
+                if is_unique_shape(new_shape, SHAPES):
+                    break
+                attempts += 1
+                new_shape = None
+            
+            if new_shape is not None:
+                SHAPES.append(new_shape)
+                self.shape_idx = len(SHAPES) - 1
+                self.shape = new_shape
         
         # Get or create color for this shape index
         if self.shape_idx not in COLOR_ASSIGN:
             COLOR_ASSIGN[self.shape_idx] = get_random_color()
-        self.color = COLOR_ASSIGN[self.shape_idx]  # Always assign color
+        self.color = COLOR_ASSIGN[self.shape_idx]
         
         self.x = GRID_WIDTH // 2 - len(self.shape[0]) // 2
         self.y = 0
